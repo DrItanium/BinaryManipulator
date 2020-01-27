@@ -133,7 +133,7 @@ class EncoderDecoder final {
             return std::make_tuple<typename Patterns::SliceType...>(Patterns::decode(input)...);
         }
         static constexpr BinaryType encode(typename Patterns::SliceType&& ... values) noexcept {
-            return (Patterns::encode(values) | ...);
+            return (Patterns::encode(std::move(values)) | ...);
         }
         static constexpr BinaryType encode(BinaryType value, typename Patterns::SliceType&& ... inputs) noexcept {
             if constexpr (NumberOfPatterns == 0) {
@@ -141,6 +141,16 @@ class EncoderDecoder final {
             } else {
                 return (Patterns::encode(value, inputs) | ... );
             }
+        }
+    private:
+        template<std::size_t ... I>
+        static constexpr BinaryType encode0(UnpackedBinary&& tuple, std::index_sequence<I...>) noexcept {
+            return encode(std::move(std::get<I>(tuple))...);
+        }
+    public:
+        static constexpr BinaryType encode(UnpackedBinary&& tuple) noexcept {
+            // need to unpack the tuple
+            return encode0(std::move(tuple), std::make_index_sequence<std::tuple_size_v<UnpackedBinary>> {});
         }
 };
 template<typename T, typename ... Patterns>
