@@ -109,14 +109,6 @@ private:
     static constexpr InteractPair _description { mask, shift };
 };
 
-template<typename T, T mask, T shift = static_cast<T>(0)>
-using NoCastPattern = Pattern<T, T, mask, shift>;
-
-template<typename T, T mask, T shift = static_cast<T>(0)>
-using BoolPattern = Pattern<T, bool, mask, shift>;
-
-template<typename T, T position>
-using FlagPattern = BoolPattern<T, static_cast<T>(1) << position, position>;
 
 template<typename T, typename ... Patterns>
 class Description final {
@@ -169,6 +161,9 @@ constexpr decltype(auto) unpack(T input) noexcept {
 
 template<typename T>
 constexpr auto BitCount = sizeof(T) * CHAR_BIT;
+
+template<>
+constexpr auto BitCount<bool> = 1;
 
 template<typename T>
 class HalfOf final {
@@ -289,6 +284,15 @@ template<typename T>
 constexpr T fromQuarters(QuarterType_t<T>&& a, QuarterType_t<T>&& b, QuarterType_t<T>&& c, QuarterType_t<T>&& d) noexcept {
     return LittleEndianQuarters<T>::encode(std::move(a), std::move(b), std::move(c), std::move(d));
 }
+
+template<typename T, T mask, T shift = static_cast<T>(0)>
+using NoCastPattern = Pattern<T, T, mask, shift>;
+
+template<typename T, T mask, T shift = static_cast<T>(0)>
+using BoolPattern = Pattern<T, bool, mask, shift>;
+
+template<typename T, T position>
+using FlagPattern = BoolPattern<T, static_cast<T>(1) << position, position>;
 
 } // end namespace BinaryManipulation
 #endif // BinaryManipulation_h__
