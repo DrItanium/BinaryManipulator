@@ -96,10 +96,10 @@ public:
     constexpr auto getMask() const noexcept { return mask; }
     constexpr auto getShift() const noexcept { return shift; }
     static constexpr auto decode(DataType input) noexcept {
-        return i960::decode<DataType, SliceType, _description>(input);
+        return BinaryManipulation::decode<DataType, SliceType, _description>(input);
     }
     static constexpr auto encode(DataType value, SliceType input) noexcept {
-        return i960::encode<DataType, SliceType, _description>(value, input);
+        return BinaryManipulation::encode<DataType, SliceType, _description>(value, input);
     }
     static constexpr auto encode(SliceType input) noexcept {
         return encode(static_cast<DataType>(0), input);
@@ -112,13 +112,20 @@ template<typename T, T mask, T shift = static_cast<T>(0)>
 using NoCastPattern = BitPattern<T, T, mask, shift>;
 
 template<typename T, T mask, T shift = static_cast<T>(0)>
-using FlagPattern = BitPattern<T, bool, mask, shift>;
+using BoolPattern = BitPattern<T, bool, mask, shift>;
+
+template<typename T, T position>
+using FlagPattern = BoolPattern<T, static_cast<T>(1) << position, position>;
 
 template<typename T, typename ... Patterns>
 class EncoderDecoder final {
     public:
         using BinaryType = T;
-        using UnpackedBinary = std::tuple<typename Patterns::SliceType...>;
+        /// @todo unpack nested encoder/decoders instead of accumulating
+        using UnpackedBinary = std::tuple<typename Patterns::SliceType ...>;
+        // nested compatibility
+        using SliceType = UnpackedBinary;
+        using DataType = BinaryType;
         static constexpr auto NumberOfPatterns = std::tuple_size_v<UnpackedBinary>;
 
         static_assert((std::is_same_v<typename Patterns::DataType, BinaryType> && ...), "All patterns must operate on the provided binary type!");
@@ -137,6 +144,16 @@ class EncoderDecoder final {
             }
         }
 };
+template<typename T, typename ... Patterns>
+constexpr T pack(typename Patterns::SliceType&& ... inputs) noexcept {
+    return EncoderDecoder<T, Patterns...>::encode(inputs...);
+}
+
+template<typename T, typename ... Patterns>
+constexpr typename EncoderDecoder<T, Patterns...>::UnpackedBinary unpack(T input) noexcept {
+    return EncoderDecoder<T, Patterns...>::decode(input);
+}
+
 using Byte3OfOrdinal32 = BitPattern<uint32_t, uint8_t, 0xFF00'0000, 24>;
 using Byte2OfOrdinal32 = BitPattern<uint32_t, uint8_t, 0x00FF'0000, 16>;
 using Byte1OfOrdinal32 = BitPattern<uint32_t, uint8_t, 0x0000'FF00, 8>;
@@ -152,11 +169,6 @@ using Ordinal32AsLittleEndianBytes = EncoderDecoder<uint32_t,
 using Ordinal32AsLittleEndianHalves = EncoderDecoder<uint32_t,
       LowerHalfOfOrdinal32,
       UpperHalfOfOrdinal32>;
-template<typename T, typename ... Patterns>
-constexpr T encode(typename Patterns::SliceType&& ... inputs) noexcept {
-    EncoderDecoder<T, Patterns...> tmp;
-    return tmp.encode(inputs...);
-}
 
 
 } // end namespace BinaryManipulation
