@@ -120,26 +120,25 @@ using FlagPattern = BoolPattern<T, static_cast<T>(1) << position, position>;
 template<typename T, typename ... Patterns>
 class EncoderDecoder final {
     public:
-        using BinaryType = T;
-        using UnpackedBinary = std::tuple<typename Patterns::SliceType ...>;
-        // nested compatibility
-        using SliceType = UnpackedBinary;
-        using DataType = BinaryType;
-        static constexpr auto NumberOfPatterns = std::tuple_size_v<UnpackedBinary>;
+        using DataType = T;
+        using SliceType = std::tuple<typename Patterns::SliceType ...>;
+        static constexpr auto NumberOfPatterns = std::tuple_size_v<SliceType>;
 
-        static_assert((std::is_same_v<typename Patterns::DataType, BinaryType> && ...), "All patterns must operate on the provided binary type!");
+        static_assert((std::is_same_v<typename Patterns::DataType, DataType> && ...), "All patterns must operate on the provided binary type!");
     public:
-        static constexpr decltype(auto) decode(BinaryType input) noexcept {
+        static constexpr decltype(auto) decode(DataType input) noexcept {
+            // Do not return a single element tuple as it makes everything more complicated, instead
+            // return that element itself. In all other cases we must return the tuple as expected
             if constexpr (auto tup = std::make_tuple<typename Patterns::SliceType...>(Patterns::decode(input)...); NumberOfPatterns == 1) {
                 return std::get<0>(tup);
             } else {
                 return tup;
             }
         }
-        static constexpr BinaryType encode(typename Patterns::SliceType&& ... values) noexcept {
+        static constexpr DataType encode(typename Patterns::SliceType&& ... values) noexcept {
             return (Patterns::encode(std::move(values)) | ...);
         }
-        static constexpr BinaryType encode(BinaryType value, typename Patterns::SliceType&& ... inputs) noexcept {
+        static constexpr DataType encode(DataType value, typename Patterns::SliceType&& ... inputs) noexcept {
             if constexpr (NumberOfPatterns == 0) {
                 return value;
             } else {
@@ -148,13 +147,13 @@ class EncoderDecoder final {
         }
     private:
         template<std::size_t ... I>
-        static constexpr BinaryType encode0(UnpackedBinary&& tuple, std::index_sequence<I...>) noexcept {
+        static constexpr DataType encode0(SliceType&& tuple, std::index_sequence<I...>) noexcept {
             return encode(std::move(std::get<I>(tuple))...);
         }
     public:
-        static constexpr BinaryType encode(UnpackedBinary&& tuple) noexcept {
+        static constexpr DataType encode(SliceType&& tuple) noexcept {
             // need to unpack the tuple
-            return encode0(std::move(tuple), std::make_index_sequence<std::tuple_size_v<UnpackedBinary>> {});
+            return encode0(std::move(tuple), std::make_index_sequence<std::tuple_size_v<SliceType>> {});
         }
 };
 template<typename T, typename ... Patterns>
