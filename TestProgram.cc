@@ -46,8 +46,58 @@ void test1() {
     auto combination = BinaryManipulation::pack<uint32_t, TestDescription>(std::move(result));
     outputToCout(combination);
 }
+void test2() {
+    std::cout << "Simple test 2: i960 Opcode Translation" << std::endl;
+    using Ordinal = uint32_t;
+    using HalfOrdinal = uint16_t;
+    // we must construct a 16-bit opcode from the standard and extended pieces
+    using StandardOpcodePattern = BinaryManipulation::Pattern<Ordinal, HalfOrdinal, 0xFF00'0000, 24>;
+    using ExtendedOpcodePattern = BinaryManipulation::Pattern<Ordinal, HalfOrdinal, 0b111'1000'0000, 7>;
+    using ShiftStandardOpcodeIntoOpcode16 = BinaryManipulation::NoCastPattern<HalfOrdinal, 0x00'FF, 4>;
+    using ShiftExtendedOpcodeIntoOpcode16 = BinaryManipulation::NoCastPattern<HalfOrdinal, 0x00'0F>;
+
+    using OpcodeExtraction = BinaryManipulation::Description<Ordinal, StandardOpcodePattern, ExtendedOpcodePattern>;
+    using Opcode16Builder  = BinaryManipulation::Description<HalfOrdinal, ShiftStandardOpcodeIntoOpcode16, ShiftExtendedOpcodeIntoOpcode16>;
+
+    auto fn = [](Ordinal bits) noexcept {
+        auto standardManual = StandardOpcodePattern::decode(bits);
+        auto extendedManual = ExtendedOpcodePattern::decode(bits);
+        auto [sAuto, eAuto] = OpcodeExtraction::decode(bits);
+        if ((sAuto != standardManual) || (eAuto != extendedManual)) {
+            if ((sAuto != standardManual)) {
+                std::cout << "sAuto( " << std::hex << sAuto << ") != sManual(" << std::hex << standardManual << ")" << std::endl;
+            }
+            if ((eAuto != extendedManual)) {
+                std::cout << "eAuto( " << std::hex << eAuto << ") != eManual(" << std::hex << extendedManual << ")" << std::endl;
+            }
+            return false;
+        }
+        auto opcode16MajorManual = ShiftStandardOpcodeIntoOpcode16::encode(standardManual);
+        auto opcode16ExtendedManual = ShiftExtendedOpcodeIntoOpcode16::encode(extendedManual);
+        auto o16ManualResult = opcode16MajorManual | opcode16ExtendedManual;
+        auto o16AutoResult = Opcode16Builder::encode(std::move(sAuto), std::move(eAuto));
+        if (o16ManualResult != o16AutoResult) {
+            std::cout << "manual result (0x" << std::hex  << o16ManualResult << ") != auto result(0x" << std::hex << o16AutoResult << ")" << std::endl;
+            return false;
+        }
+        /// @todo more checks here for decomposing back into component pieces and going backwards
+        return true;
+    };
+    for (int i = 0; i < 0x100; ++i) {
+        for (int j = 0; j < 16; ++j) {
+            Ordinal value = StandardOpcodePattern::encode(i) | ExtendedOpcodePattern::encode(j);
+            if (!fn(value)) {
+                std::cout << "Bad instruction " << std::hex << value << std::endl;
+                std::cout << "Failure! terminating early!" << std::endl;
+                return;
+            }
+        }
+    }
+    std::cout << "Passed!" << std::endl;
+}
 int main() {
     test0();
     test1();
+    test2();
     return 0;
 }
