@@ -183,7 +183,7 @@ class HalfOf final {
         HalfOf& operator=(HalfOf&&) = delete;
 };
 
-#define DefHalf(x, r) \
+#define DefFact_HalfOf(x, r) \
 template<> \
 class HalfOf<x> final { \
     public: \
@@ -197,25 +197,35 @@ class HalfOf<x> final { \
         HalfOf& operator=(const HalfOf&) = delete; \
         HalfOf& operator=(HalfOf&&) = delete; \
 }
-DefHalf(uint16_t, uint8_t);
-DefHalf(uint8_t, uint8_t);
-DefHalf(uint32_t, uint16_t);
-DefHalf(uint64_t, uint32_t);
-DefHalf(int16_t, int8_t);
-DefHalf(int8_t,  int8_t);
-DefHalf(int32_t, int16_t);
-DefHalf(int64_t, int32_t);
-#undef DefHalf
+DefFact_HalfOf(uint16_t, uint8_t);
+DefFact_HalfOf(uint8_t, uint8_t);
+DefFact_HalfOf(uint32_t, uint16_t);
+DefFact_HalfOf(uint64_t, uint32_t);
+DefFact_HalfOf(int16_t, int8_t);
+DefFact_HalfOf(int8_t,  int8_t);
+DefFact_HalfOf(int32_t, int16_t);
+DefFact_HalfOf(int64_t, int32_t);
+#undef DefFact_HalfOf
+
 template<typename T>
 using HalfType_t = typename HalfOf<T>::HalfType;
 template<typename T>
+constexpr auto ShiftAmount = BitCount<T> / 2;
+template<typename T>
 constexpr T LowerHalfMask = static_cast<T>(std::numeric_limits<HalfType_t<T>>::max());
+template<> constexpr uint8_t LowerHalfMask<uint8_t> = 0x0F;
+template<> constexpr int8_t LowerHalfMask<int8_t> = 0x0F;
 template<typename T>
 constexpr T UpperHalfMask = ~LowerHalfMask<T>;
+template<> constexpr uint8_t UpperHalfMask<uint8_t> = 0xF0;
+template<> constexpr int8_t UpperHalfMask<int8_t> = 0xF0;
+static_assert(ShiftAmount<uint16_t> == 8);
+static_assert(ShiftAmount<uint8_t> == 4);
+static_assert(ShiftAmount<int8_t> == 4);
 template<typename T>
-using UpperHalfPattern = Pattern<T, HalfType_t<T>, UpperHalfMask<T>, BitCount<HalfType_t<T>>>;
+using UpperHalfPattern = Pattern<T, HalfType_t<T>, UpperHalfMask<T>, ShiftAmount<T>>;
 template<typename T>
-using LowerHalfPattern = Pattern<T, HalfType_t<T>, LowerHalfMask<T>>;
+using LowerHalfPattern = Pattern<T, HalfType_t<T>, LowerHalfMask<T>, 0>;
 using UpperHalfOfOrdinal16 = UpperHalfPattern<uint16_t>;
 using LowerHalfOfOrdinal16 = LowerHalfPattern<uint16_t>;
 using Byte3OfOrdinal32 = Pattern<uint32_t, uint8_t, 0xFF00'0000, 24>;
