@@ -129,8 +129,12 @@ class EncoderDecoder final {
 
         static_assert((std::is_same_v<typename Patterns::DataType, BinaryType> && ...), "All patterns must operate on the provided binary type!");
     public:
-        static constexpr UnpackedBinary decode(BinaryType input) noexcept {
-            return std::make_tuple<typename Patterns::SliceType...>(Patterns::decode(input)...);
+        static constexpr decltype(auto) decode(BinaryType input) noexcept {
+            if constexpr (auto tup = std::make_tuple<typename Patterns::SliceType...>(Patterns::decode(input)...); NumberOfPatterns == 1) {
+                return std::get<0>(tup);
+            } else {
+                return tup;
+            }
         }
         static constexpr BinaryType encode(typename Patterns::SliceType&& ... values) noexcept {
             return (Patterns::encode(std::move(values)) | ...);
@@ -159,7 +163,7 @@ constexpr T pack(typename Patterns::SliceType&& ... inputs) noexcept {
 }
 
 template<typename T, typename ... Patterns>
-constexpr typename EncoderDecoder<T, Patterns...>::UnpackedBinary unpack(T input) noexcept {
+constexpr decltype(auto) unpack(T input) noexcept {
     return EncoderDecoder<T, Patterns...>::decode(input);
 }
 

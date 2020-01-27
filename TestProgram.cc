@@ -2,9 +2,8 @@
 #include <iostream>
 
 void test0() {
-    std::cout << "Simple test 0" << std::endl;
-    auto result = BinaryManipulation::unpack<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes>(0xFDEDABCD);
-    auto contents = std::get<0>(result);
+    std::cout << "Simple test 0 of single decoder" << std::endl;
+    auto contents = BinaryManipulation::unpack<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes>(0xFDEDABCD);
     // we get a tuple of tuples back
     auto [l0, l1, h0, h1] = contents;
     auto fn = [](auto value) noexcept {
@@ -20,11 +19,10 @@ void test0() {
     fn(combination);
 }
 void test1() {
-    std::cout << "Simple test 1: Nested EncoderDecoers" << std::endl;
+    std::cout << "Simple test 1: Single NestedEncoderDecoer" << std::endl;
     using TestEncoderDecoder = BinaryManipulation::EncoderDecoder<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes,
                                                                             BinaryManipulation::Ordinal32AsLittleEndianHalves>;
-    auto tmp = BinaryManipulation::unpack<uint32_t, TestEncoderDecoder>(0xFDEDABCD);
-    auto [result] = tmp;
+    auto result = BinaryManipulation::unpack<uint32_t, TestEncoderDecoder>(0xFDEDABCD);
     auto [quarters, halves] = result;
     auto [l0, l1, h0, h1] = quarters;
     auto [lower, upper] = halves;
