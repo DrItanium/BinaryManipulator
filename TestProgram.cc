@@ -30,7 +30,7 @@ void test0() {
 void test1() {
     std::cout << "Simple test 1: Single Nested Description" << std::endl;
     using TestDescription = BinaryManipulation::Description<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes,
-                                                                      BinaryManipulation::Ordinal32AsLittleEndianHalves>;
+                                                                      BinaryManipulation::LittleEndianHalves<uint32_t>>;
     auto result = BinaryManipulation::unpack<uint32_t, TestDescription>(0xFDEDABCD);
     auto [quarters, halves] = result;
     auto [l0, l1, h0, h1] = quarters;

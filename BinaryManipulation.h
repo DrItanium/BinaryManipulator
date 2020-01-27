@@ -210,7 +210,11 @@ DefFact_HalfOf(int64_t, int32_t);
 template<typename T>
 using HalfType_t = typename HalfOf<T>::HalfType;
 template<typename T>
+using QuarterType_t = HalfType_t<HalfType_t<T>>;
+template<typename T>
 constexpr auto HalfShiftAmount = BitCount<T> / 2;
+template<typename T>
+constexpr auto QuarterShiftAmount = BitCount<T> / 4;
 template<typename T>
 constexpr T LowerHalfMask = static_cast<T>(std::numeric_limits<HalfType_t<T>>::max());
 template<> constexpr uint8_t LowerHalfMask<uint8_t> = 0x0F;
@@ -219,13 +223,28 @@ template<typename T>
 constexpr T UpperHalfMask = ~LowerHalfMask<T>;
 template<> constexpr uint8_t UpperHalfMask<uint8_t> = 0xF0;
 template<> constexpr int8_t UpperHalfMask<int8_t> = 0xF0;
+
+template<typename T>
+constexpr T LowestQuarterMask = static_cast<T>(std::numeric_limits<QuarterType_t<T>>::max());
+template<typename T>
+constexpr T LowerQuarterMask = LowestQuarterMask<T> << QuarterShiftAmount<T>;
+template<typename T>
+constexpr T HigherQuarterMask = LowerQuarterMask<T> << QuarterShiftAmount<T>;
+template<typename T>
+constexpr T HighestQuarterMask = HigherQuarterMask<T> << QuarterShiftAmount<T>;
 static_assert(HalfShiftAmount<uint16_t> == 8);
 static_assert(HalfShiftAmount<uint8_t> == 4);
 static_assert(HalfShiftAmount<int8_t> == 4);
+
+static_assert(HighestQuarterMask<uint32_t> == 0xFF00'0000);
+static_assert(HigherQuarterMask<uint32_t>  == 0x00FF'0000);
+static_assert(LowerQuarterMask<uint32_t>   == 0x0000'FF00);
+static_assert(LowestQuarterMask<uint32_t>  == 0x0000'00FF);
 template<typename T>
 using UpperHalfPattern = Pattern<T, HalfType_t<T>, UpperHalfMask<T>, HalfShiftAmount<T>>;
 template<typename T>
 using LowerHalfPattern = Pattern<T, HalfType_t<T>, LowerHalfMask<T>, 0>;
+
 using UpperHalfOfOrdinal16 = UpperHalfPattern<uint16_t>;
 using LowerHalfOfOrdinal16 = LowerHalfPattern<uint16_t>;
 using Byte3OfOrdinal32 = Pattern<uint32_t, uint8_t, 0xFF00'0000, 24>;
@@ -248,7 +267,6 @@ using Ordinal32AsLittleEndianBytes = Description<uint32_t,
       Byte1OfOrdinal32,
       Byte2OfOrdinal32,
       Byte3OfOrdinal32>;
-using Ordinal32AsLittleEndianHalves = LittleEndianHalves<uint32_t>;
 
 } // end namespace BinaryManipulation
 #endif // BinaryManipulation_h__
