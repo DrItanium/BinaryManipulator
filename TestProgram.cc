@@ -82,9 +82,10 @@ void test2() {
         /// @todo more checks here for decomposing back into component pieces and going backwards
         return true;
     };
+    using GenericOpcodeEncoder = BinaryManipulation::Description<Ordinal, StandardOpcodePattern, ExtendedOpcodePattern>;
     for (int i = 0; i < 0x100; ++i) {
         for (int j = 0; j < 16; ++j) {
-            Ordinal value = StandardOpcodePattern::encode(i) | ExtendedOpcodePattern::encode(j);
+            auto value = GenericOpcodeEncoder::encode(i, j);
             if (!fn(value)) {
                 std::cout << "Bad instruction " << std::hex << value << std::endl;
                 std::cout << "Failure! terminating early!" << std::endl;
