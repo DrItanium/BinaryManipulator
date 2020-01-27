@@ -15,7 +15,7 @@ void outputToCout(T value) noexcept {
 }
 void test0() {
     std::cout << "Simple test 0 of single decoder" << std::endl;
-    auto contents = BinaryManipulation::unpack<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes>(0xFDEDABCD);
+    auto contents = BinaryManipulation::unpack<uint32_t, BinaryManipulation::LittleEndianQuarters<uint32_t>>(0xFDEDABCD);
     // we get a tuple of tuples back
     auto [l0, l1, h0, h1] = contents;
     outputToCout(l0);
@@ -24,12 +24,12 @@ void test0() {
     outputToCout(h1);
 
     // put the tuple back in
-    auto combination = BinaryManipulation::pack<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes>(std::move(contents));
+    auto combination = BinaryManipulation::pack<uint32_t, BinaryManipulation::LittleEndianQuarters<uint32_t>>(std::move(contents));
     outputToCout(combination);
 }
 void test1() {
     std::cout << "Simple test 1: Single Nested Description" << std::endl;
-    using TestDescription = BinaryManipulation::Description<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes,
+    using TestDescription = BinaryManipulation::Description<uint32_t, BinaryManipulation::LittleEndianQuarters<uint32_t>,
                                                                       BinaryManipulation::LittleEndianHalves<uint32_t>>;
     auto result = BinaryManipulation::unpack<uint32_t, TestDescription>(0xFDEDABCD);
     auto [quarters, halves] = result;

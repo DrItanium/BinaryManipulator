@@ -261,16 +261,7 @@ using LowerQuarterPattern  = Pattern<T, QuarterType_t<T>, LowerQuarterMask<T>, Q
 template<typename T>
 using LowestQuarterPattern = Pattern<T, QuarterType_t<T>, LowestQuarterMask<T>>;
 
-using UpperHalfOfOrdinal16 = UpperHalfPattern<uint16_t>;
-using LowerHalfOfOrdinal16 = LowerHalfPattern<uint16_t>;
-using Byte3OfOrdinal32 = Pattern<uint32_t, uint8_t, 0xFF00'0000, 24>;
-using Byte2OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x00FF'0000, 16>;
-using Byte1OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x0000'FF00, 8>;
-using Byte0OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x0000'00FF>;
-using UpperHalfOfOrdinal32 = UpperHalfPattern<uint32_t>;
-using LowerHalfOfOrdinal32 = LowerHalfPattern<uint32_t>;
-using UpperHalfOfOrdinal64 = UpperHalfPattern<uint64_t>;
-using LowerHalfOfOrdinal64 = LowerHalfPattern<uint64_t>;
+static_assert(std::is_same_v<QuarterType_t<uint32_t>, uint8_t>);
 
 template<typename T>
 using LittleEndianHalves = Description<T, LowerHalfPattern<T>, UpperHalfPattern<T>>;
@@ -278,11 +269,8 @@ using LittleEndianHalves = Description<T, LowerHalfPattern<T>, UpperHalfPattern<
 template<typename T>
 using BigEndianHalves = Description<T, UpperHalfPattern<T>, LowerHalfPattern<T>>;
 
-using Ordinal32AsLittleEndianBytes = Description<uint32_t, 
-      Byte0OfOrdinal32,
-      Byte1OfOrdinal32,
-      Byte2OfOrdinal32,
-      Byte3OfOrdinal32>;
+template<typename T>
+using LittleEndianQuarters = Description<T, LowestQuarterPattern<T>, LowerQuarterPattern<T>, HigherQuarterPattern<T>, HighestQuarterPattern<T>>;
 
 } // end namespace BinaryManipulation
 #endif // BinaryManipulation_h__
