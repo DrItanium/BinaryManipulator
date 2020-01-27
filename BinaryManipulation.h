@@ -121,7 +121,6 @@ template<typename T, typename ... Patterns>
 class EncoderDecoder final {
     public:
         using BinaryType = T;
-        /// @todo unpack nested encoder/decoders instead of accumulating
         using UnpackedBinary = std::tuple<typename Patterns::SliceType ...>;
         // nested compatibility
         using SliceType = UnpackedBinary;
@@ -146,7 +145,7 @@ class EncoderDecoder final {
 };
 template<typename T, typename ... Patterns>
 constexpr T pack(typename Patterns::SliceType&& ... inputs) noexcept {
-    return EncoderDecoder<T, Patterns...>::encode(inputs...);
+    return EncoderDecoder<T, Patterns...>::encode(std::forward<typename Patterns::SliceType>(inputs)...);
 }
 
 template<typename T, typename ... Patterns>
