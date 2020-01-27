@@ -31,6 +31,7 @@
 #include <tuple>
 #include <type_traits>
 #include <cstdint>
+#include <climits>
 namespace BinaryManipulation {
 
 template<typename T>
@@ -166,22 +167,78 @@ constexpr decltype(auto) unpack(T input) noexcept {
     return Description<T, Patterns...>::decode(input);
 }
 
+template<typename T>
+constexpr auto BitCount = sizeof(T) * CHAR_BIT;
+
+template<typename T>
+class HalfOf final {
+    public:
+        using FullType = T;
+    public:
+        HalfOf() = delete;
+        ~HalfOf() = delete;
+        HalfOf(const HalfOf&) = delete;
+        HalfOf(HalfOf&&) = delete;
+        HalfOf& operator=(const HalfOf&) = delete;
+        HalfOf& operator=(HalfOf&&) = delete;
+};
+
+#define DefHalf(x, r) \
+template<> \
+class HalfOf<x> final { \
+    public: \
+        using FullType = x; \
+        using HalfType = r;  \
+    public: \
+        HalfOf() = delete; \
+        ~HalfOf() = delete; \
+        HalfOf(const HalfOf&) = delete; \
+        HalfOf(HalfOf&&) = delete; \
+        HalfOf& operator=(const HalfOf&) = delete; \
+        HalfOf& operator=(HalfOf&&) = delete; \
+}
+DefHalf(uint16_t, uint8_t);
+DefHalf(uint8_t, uint8_t);
+DefHalf(uint32_t, uint16_t);
+DefHalf(uint64_t, uint32_t);
+DefHalf(int16_t, int8_t);
+DefHalf(int8_t,  int8_t);
+DefHalf(int32_t, int16_t);
+DefHalf(int64_t, int32_t);
+#undef DefHalf
+template<typename T>
+using HalfType_t = typename HalfOf<T>::HalfType;
+template<typename T>
+constexpr T LowerHalfMask = static_cast<T>(std::numeric_limits<HalfType_t<T>>::max());
+template<typename T>
+constexpr T UpperHalfMask = ~LowerHalfMask<T>;
+template<typename T>
+using UpperHalfPattern = Pattern<T, HalfType_t<T>, UpperHalfMask<T>, BitCount<HalfType_t<T>>>;
+template<typename T>
+using LowerHalfPattern = Pattern<T, HalfType_t<T>, LowerHalfMask<T>>;
+using UpperHalfOfOrdinal16 = UpperHalfPattern<uint16_t>;
+using LowerHalfOfOrdinal16 = LowerHalfPattern<uint16_t>;
 using Byte3OfOrdinal32 = Pattern<uint32_t, uint8_t, 0xFF00'0000, 24>;
 using Byte2OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x00FF'0000, 16>;
 using Byte1OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x0000'FF00, 8>;
 using Byte0OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x0000'00FF>;
-using UpperHalfOfOrdinal32 = Pattern<uint32_t, uint16_t, 0xFFFF'0000, 16>;
-using LowerHalfOfOrdinal32 = Pattern<uint32_t, uint16_t, 0x0000'FFFF>;
+using UpperHalfOfOrdinal32 = UpperHalfPattern<uint32_t>;
+using LowerHalfOfOrdinal32 = LowerHalfPattern<uint32_t>;
+using UpperHalfOfOrdinal64 = UpperHalfPattern<uint64_t>;
+using LowerHalfOfOrdinal64 = LowerHalfPattern<uint64_t>;
+
+template<typename T>
+using LittleEndianHalves = Description<T, LowerHalfPattern<T>, UpperHalfPattern<T>>;
+
+template<typename T>
+using BigEndianHalves = Description<T, UpperHalfPattern<T>, LowerHalfPattern<T>>;
 
 using Ordinal32AsLittleEndianBytes = Description<uint32_t, 
       Byte0OfOrdinal32,
       Byte1OfOrdinal32,
       Byte2OfOrdinal32,
       Byte3OfOrdinal32>;
-using Ordinal32AsLittleEndianHalves = Description<uint32_t,
-      LowerHalfOfOrdinal32,
-      UpperHalfOfOrdinal32>;
-
+using Ordinal32AsLittleEndianHalves = LittleEndianHalves<uint32_t>;
 
 } // end namespace BinaryManipulation
 #endif // BinaryManipulation_h__
