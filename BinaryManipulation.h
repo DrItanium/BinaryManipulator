@@ -210,7 +210,7 @@ DefFact_HalfOf(int64_t, int32_t);
 template<typename T>
 using HalfType_t = typename HalfOf<T>::HalfType;
 template<typename T>
-constexpr auto ShiftAmount = BitCount<T> / 2;
+constexpr auto HalfShiftAmount = BitCount<T> / 2;
 template<typename T>
 constexpr T LowerHalfMask = static_cast<T>(std::numeric_limits<HalfType_t<T>>::max());
 template<> constexpr uint8_t LowerHalfMask<uint8_t> = 0x0F;
@@ -219,11 +219,11 @@ template<typename T>
 constexpr T UpperHalfMask = ~LowerHalfMask<T>;
 template<> constexpr uint8_t UpperHalfMask<uint8_t> = 0xF0;
 template<> constexpr int8_t UpperHalfMask<int8_t> = 0xF0;
-static_assert(ShiftAmount<uint16_t> == 8);
-static_assert(ShiftAmount<uint8_t> == 4);
-static_assert(ShiftAmount<int8_t> == 4);
+static_assert(HalfShiftAmount<uint16_t> == 8);
+static_assert(HalfShiftAmount<uint8_t> == 4);
+static_assert(HalfShiftAmount<int8_t> == 4);
 template<typename T>
-using UpperHalfPattern = Pattern<T, HalfType_t<T>, UpperHalfMask<T>, ShiftAmount<T>>;
+using UpperHalfPattern = Pattern<T, HalfType_t<T>, UpperHalfMask<T>, HalfShiftAmount<T>>;
 template<typename T>
 using LowerHalfPattern = Pattern<T, HalfType_t<T>, LowerHalfMask<T>, 0>;
 using UpperHalfOfOrdinal16 = UpperHalfPattern<uint16_t>;
