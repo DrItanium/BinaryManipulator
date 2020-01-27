@@ -266,11 +266,29 @@ static_assert(std::is_same_v<QuarterType_t<uint32_t>, uint8_t>);
 template<typename T>
 using LittleEndianHalves = Description<T, LowerHalfPattern<T>, UpperHalfPattern<T>>;
 
-template<typename T>
-using BigEndianHalves = Description<T, UpperHalfPattern<T>, LowerHalfPattern<T>>;
 
 template<typename T>
 using LittleEndianQuarters = Description<T, LowestQuarterPattern<T>, LowerQuarterPattern<T>, HigherQuarterPattern<T>, HighestQuarterPattern<T>>;
+
+template<typename T>
+constexpr decltype(auto) getHalves(T input) noexcept {
+    return unpack<T, LittleEndianHalves<T>>(input);
+}
+
+template<typename T>
+constexpr T fromHalves(HalfType_t<T>&& a, HalfType_t<T>&& b) noexcept {
+    return LittleEndianHalves<T>::encode(a, b);
+}
+
+template<typename T>
+constexpr decltype(auto) getQuarters(T input) noexcept {
+    return unpack<T, LittleEndianQuarters<T>>(input);
+}
+
+template<typename T>
+constexpr T fromQuarters(QuarterType_t<T>&& a, QuarterType_t<T>&& b, QuarterType_t<T>&& c, QuarterType_t<T>&& d) noexcept {
+    return LittleEndianQuarters<T>::encode(std::move(a), std::move(b), std::move(c), std::move(d));
+}
 
 } // end namespace BinaryManipulation
 #endif // BinaryManipulation_h__

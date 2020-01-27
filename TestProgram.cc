@@ -15,7 +15,7 @@ void outputToCout(T value) noexcept {
 }
 void test0() {
     std::cout << "Simple test 0 of single decoder" << std::endl;
-    auto contents = BinaryManipulation::unpack<uint32_t, BinaryManipulation::LittleEndianQuarters<uint32_t>>(0xFDEDABCD);
+    auto contents = BinaryManipulation::getQuarters<uint32_t>(0xFDEDABCD);
     // we get a tuple of tuples back
     auto [l0, l1, h0, h1] = contents;
     outputToCout(l0);
@@ -23,8 +23,7 @@ void test0() {
     outputToCout(h0);
     outputToCout(h1);
 
-    // put the tuple back in
-    auto combination = BinaryManipulation::pack<uint32_t, BinaryManipulation::LittleEndianQuarters<uint32_t>>(std::move(contents));
+    auto combination = BinaryManipulation::fromQuarters<uint32_t>(std::move(l0), std::move(l1), std::move(h0), std::move(h1));
     outputToCout(combination);
 }
 void test1() {
@@ -51,7 +50,7 @@ void test2() {
     using Ordinal = uint32_t;
     using HalfOrdinal = uint16_t;
     // we must construct a 16-bit opcode from the standard and extended pieces
-    using StandardOpcodePattern = BinaryManipulation::Pattern<Ordinal, HalfOrdinal, 0xFF00'0000, 24>;
+    using StandardOpcodePattern = BinaryManipulation::HighestQuarterPattern<Ordinal>;
     using ExtendedOpcodePattern = BinaryManipulation::Pattern<Ordinal, HalfOrdinal, 0b111'1000'0000, 7>;
     using ShiftStandardOpcodeIntoOpcode16 = BinaryManipulation::NoCastPattern<HalfOrdinal, 0x00'FF, 4>;
     using ShiftExtendedOpcodeIntoOpcode16 = BinaryManipulation::NoCastPattern<HalfOrdinal, 0x00'0F>;
