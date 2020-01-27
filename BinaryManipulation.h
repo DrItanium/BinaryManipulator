@@ -81,7 +81,7 @@ constexpr T encode(T value, R input) noexcept {
 
 
 template<typename T, typename R, T mask, T shift = static_cast<T>(0)>
-class BitPattern final {
+class Pattern final {
 public:
     using DataType = T;
     using SliceType = R;
@@ -90,8 +90,8 @@ public:
     static constexpr auto Mask = mask;
     static constexpr auto Shift = shift;
 public:
-    constexpr BitPattern() = default;
-    ~BitPattern() = default;
+    constexpr Pattern() = default;
+    ~Pattern() = default;
     constexpr auto getDescription() const noexcept { return _description; }
     constexpr auto getMask() const noexcept { return mask; }
     constexpr auto getShift() const noexcept { return shift; }
@@ -109,16 +109,16 @@ private:
 };
 
 template<typename T, T mask, T shift = static_cast<T>(0)>
-using NoCastPattern = BitPattern<T, T, mask, shift>;
+using NoCastPattern = Pattern<T, T, mask, shift>;
 
 template<typename T, T mask, T shift = static_cast<T>(0)>
-using BoolPattern = BitPattern<T, bool, mask, shift>;
+using BoolPattern = Pattern<T, bool, mask, shift>;
 
 template<typename T, T position>
 using FlagPattern = BoolPattern<T, static_cast<T>(1) << position, position>;
 
 template<typename T, typename ... Patterns>
-class EncoderDecoder final {
+class Description final {
     public:
         using DataType = T;
         using SliceType = std::tuple<typename Patterns::SliceType ...>;
@@ -158,27 +158,27 @@ class EncoderDecoder final {
 };
 template<typename T, typename ... Patterns>
 constexpr T pack(typename Patterns::SliceType&& ... inputs) noexcept {
-    return EncoderDecoder<T, Patterns...>::encode(std::forward<typename Patterns::SliceType>(inputs)...);
+    return Description<T, Patterns...>::encode(std::forward<typename Patterns::SliceType>(inputs)...);
 }
 
 template<typename T, typename ... Patterns>
 constexpr decltype(auto) unpack(T input) noexcept {
-    return EncoderDecoder<T, Patterns...>::decode(input);
+    return Description<T, Patterns...>::decode(input);
 }
 
-using Byte3OfOrdinal32 = BitPattern<uint32_t, uint8_t, 0xFF00'0000, 24>;
-using Byte2OfOrdinal32 = BitPattern<uint32_t, uint8_t, 0x00FF'0000, 16>;
-using Byte1OfOrdinal32 = BitPattern<uint32_t, uint8_t, 0x0000'FF00, 8>;
-using Byte0OfOrdinal32 = BitPattern<uint32_t, uint8_t, 0x0000'00FF>;
-using UpperHalfOfOrdinal32 = BitPattern<uint32_t, uint16_t, 0xFFFF'0000, 16>;
-using LowerHalfOfOrdinal32 = BitPattern<uint32_t, uint16_t, 0x0000'FFFF>;
+using Byte3OfOrdinal32 = Pattern<uint32_t, uint8_t, 0xFF00'0000, 24>;
+using Byte2OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x00FF'0000, 16>;
+using Byte1OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x0000'FF00, 8>;
+using Byte0OfOrdinal32 = Pattern<uint32_t, uint8_t, 0x0000'00FF>;
+using UpperHalfOfOrdinal32 = Pattern<uint32_t, uint16_t, 0xFFFF'0000, 16>;
+using LowerHalfOfOrdinal32 = Pattern<uint32_t, uint16_t, 0x0000'FFFF>;
 
-using Ordinal32AsLittleEndianBytes = EncoderDecoder<uint32_t, 
+using Ordinal32AsLittleEndianBytes = Description<uint32_t, 
       Byte0OfOrdinal32,
       Byte1OfOrdinal32,
       Byte2OfOrdinal32,
       Byte3OfOrdinal32>;
-using Ordinal32AsLittleEndianHalves = EncoderDecoder<uint32_t,
+using Ordinal32AsLittleEndianHalves = Description<uint32_t,
       LowerHalfOfOrdinal32,
       UpperHalfOfOrdinal32>;
 

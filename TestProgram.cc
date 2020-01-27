@@ -28,10 +28,10 @@ void test0() {
     outputToCout(combination);
 }
 void test1() {
-    std::cout << "Simple test 1: Single NestedEncoderDecoer" << std::endl;
-    using TestEncoderDecoder = BinaryManipulation::EncoderDecoder<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes,
-                                                                            BinaryManipulation::Ordinal32AsLittleEndianHalves>;
-    auto result = BinaryManipulation::unpack<uint32_t, TestEncoderDecoder>(0xFDEDABCD);
+    std::cout << "Simple test 1: Single Nested Description" << std::endl;
+    using TestDescription = BinaryManipulation::Description<uint32_t, BinaryManipulation::Ordinal32AsLittleEndianBytes,
+                                                                      BinaryManipulation::Ordinal32AsLittleEndianHalves>;
+    auto result = BinaryManipulation::unpack<uint32_t, TestDescription>(0xFDEDABCD);
     auto [quarters, halves] = result;
     auto [l0, l1, h0, h1] = quarters;
     auto [lower, upper] = halves;
@@ -43,7 +43,7 @@ void test1() {
     outputToCout(lower);
     outputToCout(upper);
 
-    auto combination = BinaryManipulation::pack<uint32_t, TestEncoderDecoder>(std::move(result));
+    auto combination = BinaryManipulation::pack<uint32_t, TestDescription>(std::move(result));
     outputToCout(combination);
 }
 int main() {
