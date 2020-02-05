@@ -126,11 +126,16 @@ constexpr T computeMaskFromLength(T length, T offset = static_cast<T>(0)) noexce
 static_assert(computeMaskFromLength(1) == 0b1);
 static_assert(computeMaskFromLength(12) == 0b1111'1111'1111);
 static_assert(computeMaskFromLength(12,1) == 0b1'1111'1111'1110);
-template<typename T, typename R, T lsbPos, T length>
-using Field = Pattern<T, R, computeMaskFromLength(length, lsbPos), lsbPos>;
 
-static_assert(Field<uint32_t, uint32_t, 4, 12>::decode(0xABCD) == 0xABC);
-static_assert(Field<uint32_t, uint32_t, 4, 12>::encode(0xD, 0xABC) == 0xABCD);
+template<typename T, typename R, T lsbPos, T length>
+using FieldVector = Pattern<T, R, computeMaskFromLength(length, lsbPos), lsbPos>;
+
+static_assert(FieldVector<uint32_t, uint32_t, 4, 12>::decode(0xABCD) == 0xABC);
+static_assert(FieldVector<uint32_t, uint32_t, 4, 12>::encode(0xD, 0xABC) == 0xABCD);
+
+template<typename T, typename R, T start, T end>
+using FieldRange = FieldVector<T, R, start, (end - start) + 1>;
+
 
 
 template<typename T, typename ... Patterns>
@@ -307,6 +312,16 @@ template<typename T>
 constexpr T fromQuarters(QuarterType_t<T>&& a, QuarterType_t<T>&& b, QuarterType_t<T>&& c, QuarterType_t<T>&& d) noexcept {
     return LittleEndianQuarters<T>::encode(std::move(a), std::move(b), std::move(c), std::move(d));
 }
+
+// sanity checks on compilation
+// based off of aspects of the i960's arithmetic controls register as described in the manual
+static_assert(FieldVector<uint32_t, uint32_t, 0, 3>::decode(0b1'0'0110'111) == 0b111); // condition code field
+static_assert(FieldVector<uint32_t, uint32_t, 3, 4>::decode(0b1'0'0110'001) == 0b0110); // arithmetic status field
+static_assert(FieldRange<uint32_t, uint32_t, 0, 2>::decode(0b1'0'0110'111) == 0b111); // condition code field
+static_assert(FieldRange<uint32_t, uint32_t, 3, 6>::decode(0b1'0'0110'001) == 0b0110); // arithmetic status field
+static_assert(FieldRange<uint32_t, uint32_t, 21, 31>::decode(0xFFE0'0000) == 0b0111'1111'1111); // process controls' internal state field
+static_assert(Flag<uint32_t, 8>::decode(0b1'0'0000'000)); // arithmetic status field
+static_assert(!Flag<uint32_t, 8>::decode(0b1'0'1'1111'111)); // arithmetic status field (false version)
 
 } // end namespace BinaryManipulation
 #endif // BinaryManipulation_h__

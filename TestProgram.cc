@@ -95,6 +95,26 @@ void test2() {
     }
     std::cout << "Passed!" << std::endl;
 }
+// void test3() {
+//     std::cout << "Simple test 3: i960 Arithmetic Controls Description" << std::endl;
+//     using Ordinal = uint32_t;
+//     using HalfOrdinal = uint16_t;
+//     using ConditionCode = BinaryManipulation::Field<Ordinal, Ordinal, 0, 2>;
+//     using ArithmeticStatus = BinaryManipulation::Field<Ordinal, Ordinal, 3, 6>;
+//     using IntegerOverflowFlag = BinaryManipulation::Flag<Ordinal, 8>;
+// 
+//     for (int i = 0; i < 0x100; ++i) {
+//         for (int j = 0; j < 16; ++j) {
+//             auto value = GenericOpcodeEncoder::encode(i, j);
+//             if (!fn(value)) {
+//                 std::cout << "Bad instruction " << std::hex << value << std::endl;
+//                 std::cout << "Failure! terminating early!" << std::endl;
+//                 return;
+//             }
+//         }
+//     }
+//     std::cout << "Passed!" << std::endl;
+// }
 int main() {
     test0();
     test1();
