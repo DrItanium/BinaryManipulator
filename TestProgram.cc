@@ -95,29 +95,31 @@ void test2() {
     }
     std::cout << "Passed!" << std::endl;
 }
-// void test3() {
-//     std::cout << "Simple test 3: i960 Arithmetic Controls Description" << std::endl;
-//     using Ordinal = uint32_t;
-//     using HalfOrdinal = uint16_t;
-//     using ConditionCode = BinaryManipulation::Field<Ordinal, Ordinal, 0, 2>;
-//     using ArithmeticStatus = BinaryManipulation::Field<Ordinal, Ordinal, 3, 6>;
-//     using IntegerOverflowFlag = BinaryManipulation::Flag<Ordinal, 8>;
-// 
-//     for (int i = 0; i < 0x100; ++i) {
-//         for (int j = 0; j < 16; ++j) {
-//             auto value = GenericOpcodeEncoder::encode(i, j);
-//             if (!fn(value)) {
-//                 std::cout << "Bad instruction " << std::hex << value << std::endl;
-//                 std::cout << "Failure! terminating early!" << std::endl;
-//                 return;
-//             }
-//         }
-//     }
-//     std::cout << "Passed!" << std::endl;
-// }
+using Ordinal = uint32_t;
+using HalfOrdinal = uint16_t;
+template<Ordinal position>
+using TraceControlsFlag = BinaryManipulation::Flag<Ordinal, position>;
+ void test3() {
+     std::cout << "Simple test 3: i960 Arithmetic Controls Description" << std::endl;
+     using TraceControlsDesc = BinaryManipulation::Description<Ordinal, 
+           TraceControlsFlag<1>, TraceControlsFlag<2>, TraceControlsFlag<3>, TraceControlsFlag<4>, TraceControlsFlag<5>,
+           TraceControlsFlag<6>, TraceControlsFlag<7>, TraceControlsFlag<17>, TraceControlsFlag<18>, TraceControlsFlag<19>,
+           TraceControlsFlag<20>, TraceControlsFlag<21>, TraceControlsFlag<22>, TraceControlsFlag<23>>;
+     auto tup = TraceControlsDesc::decode(0xFFFF'FFFF);
+     if (std::get<0>(tup) &&
+         std::get<1>(tup) &&
+         std::get<2>(tup) &&
+         std::get<3>(tup) &&
+         std::get<4>(tup)) {
+         std::cout << "Success!" << std::endl;
+     } else {
+         std::cout << "Failure!" << std::endl;
+     }
+ }
 int main() {
     test0();
     test1();
     test2();
+    test3();
     return 0;
 }
