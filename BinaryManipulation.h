@@ -292,7 +292,22 @@ template<typename T, T mask, T shift = static_cast<T>(0)>
 using BoolPattern = Pattern<T, bool, mask, shift>;
 
 template<typename T, T position>
-using FlagPattern = BoolPattern<T, static_cast<T>(1) << position, position>;
+using Flag = BoolPattern<T, static_cast<T>(1) << position, position>;
+
+template<typename T>
+constexpr T computeMaskFromLength(T length, T offset = static_cast<T>(0)) noexcept {
+    // so 12 -> (1 << 12) - 1
+    return ((static_cast<T>(1) << length) - static_cast<T>(1)) << offset;
+}
+static_assert(computeMaskFromLength(1) == 0b1);
+static_assert(computeMaskFromLength(12) == 0b1111'1111'1111);
+static_assert(computeMaskFromLength(12,1) == 0b1'1111'1111'1110);
+template<typename T, typename R, T lsbPos, T length>
+using Field = Pattern<T, R, computeMaskFromLength(length, lsbPos), lsbPos>;
+
+static_assert(Field<uint32_t, uint32_t, 4, 12>::decode(0xABCD) == 0xABC);
+static_assert(Field<uint32_t, uint32_t, 4, 12>::encode(0xD, 0xABC) == 0xABCD);
+      
 
 } // end namespace BinaryManipulation
 #endif // BinaryManipulation_h__
